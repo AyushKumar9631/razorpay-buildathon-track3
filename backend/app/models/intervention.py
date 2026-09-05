@@ -23,7 +23,7 @@ class Intervention(Base):
     outcome = Column(String(50))  # success, failure, no_response, opted_out
     ai_reasoning = Column(Text)  # Why this intervention was chosen
     cost = Column(Numeric(8, 2))  # Cost of intervention
-    metadata = Column(JSONB)
+    extra_data = Column(JSONB)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
 
     # Relationships
     revenue_risk = relationship("RevenueRisk", back_populates="interventions")

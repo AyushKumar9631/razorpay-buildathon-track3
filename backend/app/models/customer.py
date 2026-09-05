@@ -22,7 +22,7 @@ class Customer(Base):
     total_transactions = Column(Integer, default=0)
     failed_transactions = Column(Integer, default=0)
     communication_preferences = Column(JSONB)
-    metadata = Column(JSONB)
+    extra_data = Column(JSONB)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

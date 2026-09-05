@@ -20,7 +20,7 @@ class Transaction(Base):
     payment_method = Column(String(50))  # card, upi, netbanking, wallet
     failure_reason = Column(String(255))
     failure_code = Column(String(50))
-    metadata = Column(JSONB)
+    extra_data = Column(JSONB)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
