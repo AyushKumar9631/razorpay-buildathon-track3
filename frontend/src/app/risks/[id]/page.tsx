@@ -30,6 +30,7 @@ export default function RiskDetailPage() {
   const riskId = params.id as string;
   const [risk, setRisk] = useState<RiskDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,6 +54,57 @@ export default function RiskDetailPage() {
       setLoading(false);
     }
   };
+
+  const handleProcessWithAI = async () => {
+    if (!risk || processing) return;
+
+    setProcessing(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/risks/${riskId}/process`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process risk');
+      }
+
+      // Refresh risk data
+      await fetchRiskDetail();
+      alert('Risk processed successfully with AI!');
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleMarkRecovered = async () => {
+    if (!risk) return;
+
+    const confirmed = confirm('Mark this risk as recovered?');
+    if (!confirmed) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/risks/${riskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'recovered' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update risk');
+      }
+
+      await fetchRiskDetail();
+      alert('Risk marked as recovered!');
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const hasAIAnalysis = risk?.ai_diagnosis && Object.keys(risk.ai_diagnosis).length > 0;
 
   if (loading) {
     return (
@@ -193,8 +245,12 @@ export default function RiskDetailPage() {
               <p className="text-sm text-gray-600 mb-4">
                 This risk hasn't been processed by AI yet. Click the button below to analyze.
               </p>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Process with AI
+              <button
+                onClick={handleProcessWithAI}
+                disabled={processing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? 'Processing...' : 'Process with AI'}
               </button>
             </div>
           )}
@@ -234,15 +290,26 @@ export default function RiskDetailPage() {
           <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
             <div className="space-y-2">
-              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                Process with AI
+              <button
+                onClick={handleProcessWithAI}
+                disabled={processing || hasAIAnalysis}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processing ? 'Processing...' : hasAIAnalysis ? 'Already Analyzed' : 'Process with AI'}
               </button>
-              <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
-                Mark as Recovered
+              <button
+                onClick={handleMarkRecovered}
+                disabled={risk.status === 'recovered'}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {risk.status === 'recovered' ? 'Already Recovered' : 'Mark as Recovered'}
               </button>
-              <button className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">
-                Create Intervention
-              </button>
+              <Link
+                href={`/interventions?risk_id=${riskId}`}
+                className="block w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm text-center"
+              >
+                View Interventions
+              </Link>
             </div>
           </div>
         </div>
