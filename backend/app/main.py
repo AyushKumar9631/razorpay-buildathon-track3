@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api.v1 import risks, interventions, analytics, ai_agent
+from app.api.v1 import risks, interventions, analytics, ai_agent, audit
 from app.database import engine, Base
 
 # Create FastAPI app
@@ -58,6 +58,7 @@ app.include_router(risks.router, prefix="/api/v1/risks", tags=["Risks"])
 app.include_router(interventions.router, prefix="/api/v1/interventions", tags=["Interventions"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 app.include_router(ai_agent.router, prefix="/api/v1/ai", tags=["AI Agent"])
+app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit Trail"])
 
 
 if __name__ == "__main__":
