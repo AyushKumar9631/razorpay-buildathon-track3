@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "groq"  # "openai" or "groq"
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
-    LLM_MODEL: str = "llama-3.1-70b-versatile"  # Groq: llama-3.1-70b-versatile, mixtral-8x7b-32768 | OpenAI: gpt-4-turbo-preview
+    LLM_MODEL: str = "openai/gpt-oss-120b"  # Groq: openai/gpt-oss-120b, mixtral-8x7b-32768 | OpenAI: gpt-4-turbo-preview
     LLM_TEMPERATURE: float = 0.7
     LLM_MAX_TOKENS: int = 2000
 
