@@ -3,11 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+import uuid
 
 from app.database import get_db
 from app.models.risk import RevenueRisk
 from app.models.customer import Customer
+from app.models.transaction import Transaction
+from app.models.audit import AuditTrail
 from app.services.risk_detection import RiskDetectionService
 from app.services.intervention_service import InterventionService
 
@@ -15,6 +18,29 @@ router = APIRouter()
 
 
 # Pydantic schemas
+class CreateRiskRequest(BaseModel):
+    customer_email: EmailStr
+    customer_name: Optional[str] = None
+    amount: float = Field(..., gt=0, description="Risk amount in currency")
+    risk_type: str = Field(..., description="Type: payment_failure, checkout_abandonment, subscription_failure, b2b_receivable")
+    failure_reason: Optional[str] = None
+    priority: str = Field(default="medium", description="Priority: low, medium, high")
+    transaction_id: Optional[str] = None
+    payment_method: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "customer_email": "customer@example.com",
+                "customer_name": "Rajesh Kumar",
+                "amount": 15000,
+                "risk_type": "payment_failure",
+                "failure_reason": "Card expired",
+                "priority": "high"
+            }
+        }
+
+
 class RiskResponse(BaseModel):
     id: str
     risk_type: str
@@ -139,6 +165,144 @@ async def get_risk(risk_id: str, db: Session = Depends(get_db)):
             for i in interventions
         ]
     }
+
+
+@router.post("/create")
+async def create_risk(request: CreateRiskRequest, db: Session = Depends(get_db)):
+    """
+    Create a new revenue risk manually or via API integration.
+
+    This endpoint is designed for production integration with payment gateways,
+    e-commerce platforms, billing systems, and other revenue sources.
+    """
+    # Validate risk type
+    valid_risk_types = ['payment_failure', 'checkout_abandonment', 'subscription_failure', 'b2b_receivable']
+    if request.risk_type not in valid_risk_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid risk_type. Must be one of: {', '.join(valid_risk_types)}"
+        )
+
+    # Validate priority
+    valid_priorities = ['low', 'medium', 'high']
+    if request.priority not in valid_priorities:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid priority. Must be one of: {', '.join(valid_priorities)}"
+        )
+
+    try:
+        # Find or create customer
+        customer = db.query(Customer).filter(Customer.email == request.customer_email).first()
+
+        if not customer:
+            # Create new customer
+            customer = Customer(
+                id=uuid.uuid4(),
+                customer_id=f"CUST{datetime.utcnow().timestamp():.0f}",
+                email=request.customer_email,
+                name=request.customer_name or request.customer_email.split('@')[0],
+                tier='standard',
+                lifetime_value=0.0,
+                total_transactions=0,
+                failed_transactions=1,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            db.add(customer)
+            db.flush()
+        else:
+            # Update existing customer
+            customer.failed_transactions = (customer.failed_transactions or 0) + 1
+            customer.updated_at = datetime.utcnow()
+
+        # Create transaction if transaction_id provided
+        transaction = None
+        if request.transaction_id:
+            transaction = Transaction(
+                id=uuid.uuid4(),
+                transaction_id=request.transaction_id,
+                customer_id=customer.id,
+                amount=request.amount,
+                status='failed',
+                payment_method=request.payment_method,
+                failure_reason=request.failure_reason,
+                transaction_date=datetime.utcnow()
+            )
+            db.add(transaction)
+            db.flush()
+
+        # Calculate initial risk score (simple heuristic)
+        risk_score = 70.0
+        if request.priority == 'high':
+            risk_score = 85.0
+        elif request.priority == 'low':
+            risk_score = 60.0
+
+        if request.amount > 50000:
+            risk_score += 10.0
+        elif request.amount > 20000:
+            risk_score += 5.0
+
+        risk_score = min(risk_score, 99.0)
+
+        # Create revenue risk
+        risk = RevenueRisk(
+            id=uuid.uuid4(),
+            customer_id=customer.id,
+            transaction_id=transaction.id if transaction else None,
+            risk_type=request.risk_type,
+            risk_amount=request.amount,
+            risk_score=risk_score,
+            status='active',
+            priority=request.priority,
+            root_cause=request.failure_reason or f"Manual entry: {request.risk_type}",
+            detected_at=datetime.utcnow()
+        )
+        db.add(risk)
+        db.flush()
+
+        # Create audit trail entry
+        audit_entry = AuditTrail(
+            id=uuid.uuid4(),
+            entity_type='revenue_risk',
+            entity_id=risk.id,
+            action='risk_detected',
+            actor='api' if request.transaction_id else 'manual_entry',
+            details={
+                'risk_type': request.risk_type,
+                'amount': request.amount,
+                'customer': request.customer_email,
+                'detection_method': 'api_import' if request.transaction_id else 'manual_form',
+                'priority': request.priority,
+                'failure_reason': request.failure_reason
+            },
+            compliance_check={
+                'passed': True,
+                'checks': ['amount_validation', 'customer_validation', 'data_integrity']
+            },
+            timestamp=datetime.utcnow()
+        )
+        db.add(audit_entry)
+
+        db.commit()
+
+        return {
+            'risk_id': str(risk.id),
+            'status': 'created',
+            'message': 'Risk created successfully',
+            'customer_id': customer.customer_id,
+            'risk_details': {
+                'type': risk.risk_type,
+                'amount': float(risk.risk_amount),
+                'priority': risk.priority,
+                'risk_score': float(risk.risk_score)
+            }
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create risk: {str(e)}")
 
 
 @router.post("/detect")

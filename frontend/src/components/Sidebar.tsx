@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Home, AlertTriangle, Zap, BarChart3, FileText } from 'lucide-react';
+import { Home, AlertTriangle, Zap, BarChart3, FileText, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -12,6 +12,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Risks', href: '/risks', icon: AlertTriangle },
+  { name: 'Create Risk', href: '/create-risk', icon: Plus },
   { name: 'Interventions', href: '/interventions', icon: Zap },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Audit Trail', href: '/audit', icon: FileText },
