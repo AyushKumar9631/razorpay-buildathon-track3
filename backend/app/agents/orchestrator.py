@@ -5,6 +5,7 @@ This coordinates the multi-agent workflow for revenue recovery.
 from typing import TypedDict, Annotated, Sequence, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from sqlalchemy.orm import Session
 import json
@@ -73,12 +74,22 @@ class RevenueRecoveryOrchestrator:
 
     def __init__(self, db: Session):
         self.db = db
-        self.llm = ChatOpenAI(
-            model=settings.LLM_MODEL,
-            temperature=settings.LLM_TEMPERATURE,
-            max_tokens=settings.LLM_MAX_TOKENS,
-            api_key=settings.OPENAI_API_KEY
-        )
+
+        # Initialize LLM based on provider
+        if settings.LLM_PROVIDER == "groq":
+            self.llm = ChatGroq(
+                model=settings.LLM_MODEL,
+                temperature=settings.LLM_TEMPERATURE,
+                max_tokens=settings.LLM_MAX_TOKENS,
+                api_key=settings.GROQ_API_KEY
+            )
+        else:  # openai
+            self.llm = ChatOpenAI(
+                model=settings.LLM_MODEL,
+                temperature=settings.LLM_TEMPERATURE,
+                max_tokens=settings.LLM_MAX_TOKENS,
+                api_key=settings.OPENAI_API_KEY
+            )
         self.graph = self._build_graph()
 
     def _build_graph(self) -> StateGraph:
