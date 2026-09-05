@@ -31,8 +31,33 @@ export default function InterventionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin h-12 w-12 text-blue-600" />
+      <div className="p-8">
+        <div className="mb-8 text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 text-sm">Loading interventions data...</p>
+          <p className="text-gray-500 text-xs mt-2">⏳ Render free tier may take 30-60 seconds on first load. Please be patient.</p>
+        </div>
+
+        {/* Skeleton Loading */}
+        <div className="mb-6 flex space-x-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow border border-gray-200 p-6 animate-pulse">
+              <div className="h-5 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="h-4 bg-gray-100 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-100 rounded w-full mb-4"></div>
+              <div className="flex space-x-2">
+                <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                <div className="h-6 w-16 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

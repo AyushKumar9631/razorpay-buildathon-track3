@@ -70,8 +70,47 @@ export default function AuditPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="p-8">
+        <div className="mb-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm">Loading audit trail data...</p>
+          <p className="text-gray-500 text-xs mt-2">⏳ Render free tier may take 30-60 seconds on first load. Please be patient.</p>
+        </div>
+
+        {/* Skeleton Loading */}
+        <div className="mb-6 flex space-x-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow border border-gray-200 p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-lg shadow border border-gray-200">
+          <div className="p-6 border-b border-gray-200 animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse">
+                <div className="flex items-start space-x-4">
+                  <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

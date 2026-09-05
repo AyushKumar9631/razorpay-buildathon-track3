@@ -108,8 +108,43 @@ export default function RiskDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin h-12 w-12 text-blue-600" />
+      <div className="p-8">
+        <div className="mb-8 text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 text-sm">Loading risk details...</p>
+          <p className="text-gray-500 text-xs mt-2">⏳ Render free tier may take 30-60 seconds on first load. Please be patient.</p>
+        </div>
+
+        {/* Skeleton Loading */}
+        <div className="mb-6">
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-full"></div>
+                <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-32 bg-gray-100 rounded"></div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-100 rounded"></div>
+                <div className="h-4 bg-gray-100 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
