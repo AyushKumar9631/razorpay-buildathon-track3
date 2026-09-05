@@ -95,6 +95,19 @@ export function getPriorityColor(priority: string): string {
 }
 
 /**
+ * Get color class based on risk level
+ */
+export function getRiskColor(risk: string): string {
+  const colors: Record<string, string> = {
+    high: 'text-red-600 bg-red-100',
+    medium: 'text-orange-600 bg-orange-100',
+    low: 'text-blue-600 bg-blue-100',
+    critical: 'text-purple-600 bg-purple-100',
+  };
+  return colors[risk.toLowerCase()] || 'text-gray-600 bg-gray-100';
+}
+
+/**
  * Truncate text to a maximum length
  */
 export function truncate(text: string, maxLength: number): string {
