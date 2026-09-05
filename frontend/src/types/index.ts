@@ -5,6 +5,11 @@ export interface AnalyticsOverview {
   active_risks: number;
   active_interventions: number;
   avg_recovery_time_hours: number;
+  by_priority?: Record<string, number>;
+  by_type?: Record<string, {
+    count: number;
+    amount: number;
+  }>;
   last_24h: {
     new_risks: number;
     recovered: number;
@@ -38,9 +43,11 @@ export interface RiskDetail extends Risk {
 
 export interface Intervention {
   id: string;
-  risk_id: string;
+  risk_id?: string;
+  revenue_risk_id?: string;
   intervention_type: string;
-  strategy: string;
+  intervention_strategy?: string;
+  strategy?: string;
   channel: string;
   status: string;
   outcome: string | null;
